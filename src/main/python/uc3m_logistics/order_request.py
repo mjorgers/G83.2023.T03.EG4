@@ -1,9 +1,11 @@
 """MODULE: order_request. Contains the order request class"""
-import re
 import hashlib
 import json
 from datetime import datetime
-from .order_management_exception import OrderManagementException
+from .attribute_phone_number import PhoneNumber
+from .attribute_order_type import OrderType
+from .attribute_address import Address
+from .attribute_zip_code import ZipCode
 
 class OrderRequest:
     """Class representing the register of the order in the system"""
@@ -11,10 +13,10 @@ class OrderRequest:
     def __init__( self, product_id, order_type,
                   delivery_address, phone_number, zip_code ):
         self.__product_id = product_id
-        self.__delivery_address = self.validate_address(delivery_address)
-        self.__order_type = self.validate_order_type(order_type)
-        self.__phone_number = self.validate_phone_number(phone_number)
-        self.__zip_code = self.validate_zip_code(zip_code)
+        self.__delivery_address = Address(delivery_address).value
+        self.__order_type = OrderType(order_type).value
+        self.__phone_number = PhoneNumber(phone_number).value
+        self.__zip_code = ZipCode(zip_code).value
         justnow = datetime.utcnow()
         self.__time_stamp = datetime.timestamp(justnow)
         self.__order_id =  hashlib.md5(self.__str__().encode()).hexdigest()
@@ -70,32 +72,3 @@ class OrderRequest:
     def zip_code( self ):
         """Returns the order's zip_code"""
         return self.__zip_code
-
-    def validate_order_type(self, order_type):
-        myregex = re.compile(r"(Regular|Premium)")
-        result = myregex.fullmatch(order_type)
-        if not result:
-            raise OrderManagementException("order_type is not valid")
-        return order_type
-
-    def validate_address(self, address):
-        myregex = re.compile(r"^(?=^.{20,100}$)(([a-zA-Z0-9]+\s)+[a-zA-Z0-9]+)$")
-        result = myregex.fullmatch(address)
-        if not result:
-            raise OrderManagementException("address is not valid")
-        return address
-
-    def validate_phone_number(self, phone_number):
-        myregex = re.compile(r"^(\+)[0-9]{11}")
-        result = myregex.fullmatch(phone_number)
-        if not result:
-            raise OrderManagementException("phone number is not valid")
-        return phone_number
-
-    def validate_zip_code(self, zip_code):
-        if zip_code.isnumeric() and len(zip_code) == 5:
-            if (int(zip_code) > 52999 or int(zip_code) < 1000):
-                raise OrderManagementException("zip_code is not valid")
-        else:
-            raise OrderManagementException("zip_code format is not valid")
-        return zip_code
