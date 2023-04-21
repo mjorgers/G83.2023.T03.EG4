@@ -115,24 +115,18 @@ class OrderManager:
             raise OrderManagementException("File is not found") from ex
         except json.JSONDecodeError as ex:
             raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
+        try:
+            order_id = data["OrderID"]
+            email = data["ContactEmail"]
+        except KeyError as ex:
+            raise OrderManagementException("Bad label") from ex
 
         # check all the information
-        try:
-            myregex = re.compile(r"[0-9a-fA-F]{32}$")
-            result = myregex.fullmatch(data["OrderID"])
-            if not result:
-                raise OrderManagementException("order id is not valid")
-        except KeyError as ex:
-            raise OrderManagementException("Bad label") from ex
 
-        try:
-            regex_email = r'^[a-z0-9]+([\._]?[a-z0-9]+)+[@](\w+[.])+\w{2,3}$'
-            myregex = re.compile(regex_email)
-            result = myregex.fullmatch(data["ContactEmail"])
-            if not result:
-                raise OrderManagementException("contact email is not valid")
-        except KeyError as ex:
-            raise OrderManagementException("Bad label") from ex
+        self.validate_order_id(order_id)
+
+        self.validate_email(email)
+
         file_store = JSON_FILES_PATH + "orders_store.json"
 
         with open(file_store, "r", encoding="utf-8", newline="") as file:
@@ -172,6 +166,21 @@ class OrderManager:
         self.save_orders_shipped(my_sign)
 
         return my_sign.tracking_code
+
+    def validate_email(self, email):
+        """Validate email"""
+        regex_email = r'^[a-z0-9]+([\._]?[a-z0-9]+)+[@](\w+[.])+\w{2,3}$'
+        myregex = re.compile(regex_email)
+        result = myregex.fullmatch(email)
+        if not result:
+            raise OrderManagementException("contact email is not valid")
+
+    def validate_order_id(self, order_id):
+        """Validate orderID"""
+        myregex = re.compile(r"[0-9a-fA-F]{32}$")
+        result = myregex.fullmatch(order_id)
+        if not result:
+            raise OrderManagementException("order id is not valid")
 
     def deliver_product(self, tracking_code: str) -> bool:
         """Register the delivery of the product"""
