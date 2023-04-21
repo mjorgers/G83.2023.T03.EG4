@@ -107,19 +107,9 @@ class OrderManager:
     # pylint: disable=too-many-locals
     def send_product(self, input_file: str) -> str:
         """Sends the order included in the input_file"""
-        try:
-            with open(input_file, "r", encoding="utf-8", newline="") as file:
-                data = json.load(file)
-        except FileNotFoundError as ex:
-            # file is not found
-            raise OrderManagementException("File is not found") from ex
-        except json.JSONDecodeError as ex:
-            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
-        try:
-            order_id = data["OrderID"]
-            email = data["ContactEmail"]
-        except KeyError as ex:
-            raise OrderManagementException("Bad label") from ex
+        data = self.read_json(input_file)
+
+        email, order_id = self.validate_key_labels(data)
 
         # check all the information
 
@@ -127,8 +117,22 @@ class OrderManager:
 
         self.validate_email(email)
 
-        file_store = JSON_FILES_PATH + "orders_store.json"
+        product_id, order_type = self.check_order_id(data)
 
+        my_sign = OrderShipping(product_id=product_id,
+                                order_id=data["OrderID"],
+                                order_type=order_type,
+                                delivery_email=data["ContactEmail"])
+
+        # save the OrderShipping in shipments_store.json
+
+        self.save_orders_shipped(my_sign)
+
+        return my_sign.tracking_code
+
+    def check_order_id(self, data):
+        """check order_id"""
+        file_store = JSON_FILES_PATH + "orders_store.json"
         with open(file_store, "r", encoding="utf-8", newline="") as file:
             data_list = json.load(file)
         found = False
@@ -152,20 +156,30 @@ class OrderManager:
 
                 if order.order_id != data["OrderID"]:
                     raise OrderManagementException("Orders' data have been manipulated")
-
         if not found:
             raise OrderManagementException("order_id not found")
+        return proid, reg_type
 
-        my_sign = OrderShipping(product_id=proid,
-                                order_id=data["OrderID"],
-                                order_type=reg_type,
-                                delivery_email=data["ContactEmail"])
+    def validate_key_labels(self, data):
+        """validate key labels"""
+        try:
+            order_id = data["OrderID"]
+            email = data["ContactEmail"]
+        except KeyError as ex:
+            raise OrderManagementException("Bad label") from ex
+        return email, order_id
 
-        # save the OrderShipping in shipments_store.json
-
-        self.save_orders_shipped(my_sign)
-
-        return my_sign.tracking_code
+    def read_json(self, input_file):
+        """read json"""
+        try:
+            with open(input_file, "r", encoding="utf-8", newline="") as file:
+                data = json.load(file)
+        except FileNotFoundError as ex:
+            # file is not found
+            raise OrderManagementException("File is not found") from ex
+        except json.JSONDecodeError as ex:
+            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
+        return data
 
     def validate_email(self, email):
         """Validate email"""
