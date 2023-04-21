@@ -124,25 +124,6 @@ class OrderManager:
                        zip_code: str) -> str:
         """Register the orders into the order's file"""
 
-        myregex = re.compile(r"(Regular|Premium)")
-        result = myregex.fullmatch(order_type)
-        if not result:
-            raise OrderManagementException ("order_type is not valid")
-
-        myregex = re.compile(r"^(?=^.{20,100}$)(([a-zA-Z0-9]+\s)+[a-zA-Z0-9]+)$")
-        result = myregex.fullmatch(address)
-        if not result:
-            raise OrderManagementException ("address is not valid")
-
-        myregex = re.compile(r"^(\+)[0-9]{11}")
-        result = myregex.fullmatch(phone_number)
-        if not result:
-            raise OrderManagementException ("phone number is not valid")
-        if zip_code.isnumeric() and len(zip_code) == 5:
-            if (int(zip_code) > 52999 or int(zip_code) < 1000):
-                raise OrderManagementException("zip_code is not valid")
-        else:
-            raise OrderManagementException("zip_code format is not valid")
         if self.validate_ean13(product_id):
             my_order = OrderRequest(product_id,
                                     order_type,
