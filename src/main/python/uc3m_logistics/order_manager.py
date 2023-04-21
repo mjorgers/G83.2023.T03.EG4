@@ -15,13 +15,13 @@ class OrderManager:
         pass
 
     @staticmethod
-    def validate_ean13( ean13 ):
+    def validate_ean13(ean13: str) -> bool:
         """method vor validating a ean13 code"""
         # PLEASE INCLUDE HERE THE CODE FOR VALIDATING THE EAN13
         # RETURN TRUE IF THE EAN13 IS RIGHT, OR FALSE IN OTHER CASE
         checksum = 0
         code_read = -1
-        res = False
+        result = False
         regex_ean13 = re.compile("^[0-9]{13}$")
         valid_ean13_format = regex_ean13.fullmatch(ean13)
         if valid_ean13_format is None:
@@ -39,21 +39,21 @@ class OrderManager:
         control_digit = (10 - (checksum % 10)) % 10
 
         if (code_read != -1) and (code_read == control_digit):
-            res = True
+            result = True
         else:
             raise OrderManagementException("Invalid EAN13 control digit")
-        return res
+        return result
 
     @staticmethod
-    def validate_tracking_code( t_c ):
+    def validate_tracking_code(tracking_code: str) -> None:
         """Method for validating sha256 values"""
         myregex = re.compile(r"[0-9a-fA-F]{64}$")
-        res = myregex.fullmatch(t_c)
-        if not res:
+        result = myregex.fullmatch(tracking_code)
+        if not result:
             raise OrderManagementException("tracking_code format is not valid")
 
     @staticmethod
-    def save_store( data ):
+    def save_store(order_request: OrderRequest) -> bool:
         """Medthod for saving the orders store"""
         file_store = JSON_FILES_PATH + "orders_store.json"
         #first read the file
@@ -68,10 +68,10 @@ class OrderManager:
 
         found = False
         for item in data_list:
-            if item["_OrderRequest__order_id"] == data.order_id:
+            if item["_OrderRequest__order_id"] == order_request.order_id:
                 found = True
         if found is False:
-            data_list.append(data.__dict__)
+            data_list.append(order_request.__dict__)
         else:
             raise OrderManagementException("order_id is already registered in orders_store")
         try:
@@ -82,17 +82,17 @@ class OrderManager:
         return True
 
     @staticmethod
-    def save_fast(data):
+    def save_fast(order_request: OrderRequest) -> None:
         """Method for saving the orders store"""
         orders_store = JSON_FILES_PATH + "orders_store.json"
         with open(orders_store, "r+", encoding="utf-8", newline="") as file:
             data_list = json.load(file)
-            data_list.append(data.__dict__)
+            data_list.append(order_request.__dict__)
             file.seek(0)
             json.dump(data_list, file, indent=2)
 
     @staticmethod
-    def save_orders_shipped( shipment ):
+    def save_orders_shipped(shipment: OrderShipping) -> None:
         """Saves the shipping object into a file"""
         shimpents_store_file = JSON_FILES_PATH + "shipments_store.json"
         # first read the file
@@ -116,26 +116,27 @@ class OrderManager:
 
 
     #pylint: disable=too-many-arguments
-    def register_order( self, product_id,
-                        order_type,
-                        address,
-                        phone_number,
-                        zip_code ):
+    def register_order(self,
+                       product_id: str,
+                       order_type: str,
+                       address: str,
+                       phone_number: str,
+                       zip_code: str) -> str:
         """Register the orders into the order's file"""
 
         myregex = re.compile(r"(Regular|Premium)")
-        res = myregex.fullmatch(order_type)
-        if not res:
+        result = myregex.fullmatch(order_type)
+        if not result:
             raise OrderManagementException ("order_type is not valid")
 
         myregex = re.compile(r"^(?=^.{20,100}$)(([a-zA-Z0-9]+\s)+[a-zA-Z0-9]+)$")
-        res = myregex.fullmatch(address)
-        if not res:
+        result = myregex.fullmatch(address)
+        if not result:
             raise OrderManagementException ("address is not valid")
 
         myregex = re.compile(r"^(\+)[0-9]{11}")
-        res = myregex.fullmatch(phone_number)
-        if not res:
+        result = myregex.fullmatch(phone_number)
+        if not result:
             raise OrderManagementException ("phone number is not valid")
         if zip_code.isnumeric() and len(zip_code) == 5:
             if (int(zip_code) > 52999 or int(zip_code) < 1000):
@@ -154,7 +155,7 @@ class OrderManager:
         return my_order.order_id
 
     #pylint: disable=too-many-locals
-    def send_product ( self, input_file ):
+    def send_product(self, input_file: str) -> str:
         """Sends the order included in the input_file"""
         try:
             with open(input_file, "r", encoding="utf-8", newline="") as file:
@@ -168,8 +169,8 @@ class OrderManager:
         #check all the information
         try:
             myregex = re.compile(r"[0-9a-fA-F]{32}$")
-            res = myregex.fullmatch(data["OrderID"])
-            if not res:
+            result = myregex.fullmatch(data["OrderID"])
+            if not result:
                 raise OrderManagementException("order id is not valid")
         except KeyError as ex:
             raise  OrderManagementException("Bad label") from ex
@@ -177,8 +178,8 @@ class OrderManager:
         try:
             regex_email = r'^[a-z0-9]+([\._]?[a-z0-9]+)+[@](\w+[.])+\w{2,3}$'
             myregex = re.compile(regex_email)
-            res = myregex.fullmatch(data["ContactEmail"])
-            if not res:
+            result = myregex.fullmatch(data["ContactEmail"])
+            if not result:
                 raise OrderManagementException("contact email is not valid")
         except KeyError as ex:
             raise OrderManagementException("Bad label") from ex
@@ -222,7 +223,7 @@ class OrderManager:
 
         return my_sign.tracking_code
 
-    def deliver_product( self, tracking_code ):
+    def deliver_product(self, tracking_code: str) -> bool:
         """Register the delivery of the product"""
         self.validate_tracking_code(tracking_code)
 
