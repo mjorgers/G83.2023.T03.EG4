@@ -6,13 +6,14 @@ from .attribute_phone_number import PhoneNumber
 from .attribute_order_type import OrderType
 from .attribute_address import Address
 from .attribute_zip_code import ZipCode
+from .attribute_product_id import ProductId
 
 class OrderRequest:
     """Class representing the register of the order in the system"""
     #pylint: disable=too-many-arguments
     def __init__( self, product_id, order_type,
                   delivery_address, phone_number, zip_code ):
-        self.__product_id = product_id
+        self.__product_id = ProductId(product_id).value
         self.__delivery_address = Address(delivery_address).value
         self.__order_type = OrderType(order_type).value
         self.__phone_number = PhoneNumber(phone_number).value
