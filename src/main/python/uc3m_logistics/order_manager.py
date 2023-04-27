@@ -3,7 +3,6 @@ import datetime
 import re
 import json
 from datetime import datetime
-from freezegun import freeze_time
 from .order_request import OrderRequest
 from .order_management_exception import OrderManagementException
 from .order_shipping import OrderShipping
@@ -107,22 +106,19 @@ class OrderManager:
     # pylint: disable=too-many-locals
     def send_product(self, input_file: str) -> str:
         """Sends the order included in the input_file"""
-        data = self.read_json(input_file)
+        #data = self.read_json(input_file)
 
-        email, order_id = self.validate_key_labels(data)
+        #email, order_id = self.validate_key_labels(data)
 
         # check all the information
 
-        self.validate_order_id(order_id)
+        #self.validate_order_id(order_id)
 
-        self.validate_email(email)
+        #self.validate_email(email)
 
-        product_id, order_type = self.check_order_id(data)
+        #product_id, order_type = self.check_order_id(data)
 
-        my_sign = OrderShipping(product_id=product_id,
-                                order_id=data["OrderID"],
-                                order_type=order_type,
-                                delivery_email=data["ContactEmail"])
+        my_sign = OrderShipping(input_file)
 
         # save the OrderShipping in shipments_store.json
 
@@ -130,71 +126,6 @@ class OrderManager:
 
         return my_sign.tracking_code
 
-    def check_order_id(self, data):
-        """check order_id"""
-        file_store = JSON_FILES_PATH + "orders_store.json"
-        with open(file_store, "r", encoding="utf-8", newline="") as file:
-            data_list = json.load(file)
-        found = False
-        for item in data_list:
-            if item["_OrderRequest__order_id"] == data["OrderID"]:
-                found = True
-                # retrieve the orders data
-                proid = item["_OrderRequest__product_id"]
-                address = item["_OrderRequest__delivery_address"]
-                reg_type = item["_OrderRequest__order_type"]
-                phone = item["_OrderRequest__phone_number"]
-                order_timestamp = item["_OrderRequest__time_stamp"]
-                zip_code = item["_OrderRequest__zip_code"]
-                # set the time when the order was registered for checking the md5
-                with freeze_time(datetime.fromtimestamp(order_timestamp).date()):
-                    order = OrderRequest(product_id=proid,
-                                         delivery_address=address,
-                                         order_type=reg_type,
-                                         phone_number=phone,
-                                         zip_code=zip_code)
-
-                if order.order_id != data["OrderID"]:
-                    raise OrderManagementException("Orders' data have been manipulated")
-        if not found:
-            raise OrderManagementException("order_id not found")
-        return proid, reg_type
-
-    def validate_key_labels(self, data):
-        """validate key labels"""
-        try:
-            order_id = data["OrderID"]
-            email = data["ContactEmail"]
-        except KeyError as ex:
-            raise OrderManagementException("Bad label") from ex
-        return email, order_id
-
-    def read_json(self, input_file):
-        """read json"""
-        try:
-            with open(input_file, "r", encoding="utf-8", newline="") as file:
-                data = json.load(file)
-        except FileNotFoundError as ex:
-            # file is not found
-            raise OrderManagementException("File is not found") from ex
-        except json.JSONDecodeError as ex:
-            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
-        return data
-
-    def validate_email(self, email):
-        """Validate email"""
-        regex_email = r'^[a-z0-9]+([\._]?[a-z0-9]+)+[@](\w+[.])+\w{2,3}$'
-        myregex = re.compile(regex_email)
-        result = myregex.fullmatch(email)
-        if not result:
-            raise OrderManagementException("contact email is not valid")
-
-    def validate_order_id(self, order_id):
-        """Validate orderID"""
-        myregex = re.compile(r"[0-9a-fA-F]{32}$")
-        result = myregex.fullmatch(order_id)
-        if not result:
-            raise OrderManagementException("order id is not valid")
 
     def deliver_product(self, tracking_code: str) -> bool:
         """Register the delivery of the product"""
