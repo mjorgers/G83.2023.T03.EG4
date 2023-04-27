@@ -33,29 +33,6 @@ class OrderManager:
             file.seek(0)
             json.dump(data_list, file, indent=2)
 
-    @staticmethod
-    def save_orders_shipped(shipment: OrderShipping) -> None:
-        """Saves the shipping object into a file"""
-        shimpents_store_file = JSON_FILES_PATH + "shipments_store.json"
-        # first read the file
-        try:
-            with open(shimpents_store_file, "r", encoding="utf-8", newline="") as file:
-                data_list = json.load(file)
-        except FileNotFoundError:
-            # file is not found , so  init my data_list
-            data_list = []
-        except json.JSONDecodeError as ex:
-            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
-
-        # append the shipments list
-        data_list.append(shipment.__dict__)
-
-        try:
-            with open(shimpents_store_file, "w", encoding="utf-8", newline="") as file:
-                json.dump(data_list, file, indent=2)
-        except FileNotFoundError as ex:
-            raise OrderManagementException("Wrong file or file path") from ex
-
     # pylint: disable=too-many-arguments
     def register_order(self,
                        product_id: str,
@@ -81,8 +58,8 @@ class OrderManager:
         """Sends the order included in the input_file"""
 
         my_sign = OrderShipping(input_file)
-
-        self.save_orders_shipped(my_sign)
+        my_store = JsonStore()
+        my_store.save_orders_shipped(my_sign)
 
         return my_sign.tracking_code
 
@@ -91,46 +68,19 @@ class OrderManager:
         self.validate_tracking_code(tracking_code)
 
         # check if this tracking_code is in shipments_store
-        shimpents_store_file = JSON_FILES_PATH + "shipments_store.json"
-        # first read the file
-        try:
-            with open(shimpents_store_file, "r", encoding="utf-8", newline="") as file:
-                data_list = json.load(file)
-        except json.JSONDecodeError as ex:
-            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
-        except FileNotFoundError as ex:
-            raise OrderManagementException("shipments_store not found") from ex
-        # search this tracking_code
-        found = False
-        for item in data_list:
-            if item["_OrderShipping__tracking_code"] == tracking_code:
-                found = True
-                del_timestamp = item["_OrderShipping__delivery_day"]
-        if not found:
-            raise OrderManagementException("tracking_code is not found")
+        my_store = JsonStore()
+        data_list = my_store.read_shipping_store()
 
+        # search this tracking_code
+        del_timestamp = my_store.find_tracking_code(data_list, tracking_code)
+        self.check_date(del_timestamp)
+
+        my_store.save_delivere_store(tracking_code)
+        return True
+
+    def check_date(self, del_timestamp):
+        """Check the date"""
         today = datetime.today().date()
         delivery_date = datetime.fromtimestamp(del_timestamp).date()
         if delivery_date != today:
             raise OrderManagementException("Today is not the delivery date")
-
-        shipments_file = JSON_FILES_PATH + "shipments_delivered.json"
-
-        try:
-            with open(shipments_file, "r", encoding="utf-8", newline="") as file:
-                data_list = json.load(file)
-        except FileNotFoundError as ex:
-            # file is not found , so  init my data_list
-            data_list = []
-        except json.JSONDecodeError as ex:
-            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
-
-            # append the delivery info
-        data_list.append(str(tracking_code))
-        data_list.append(str(datetime.utcnow()))
-        try:
-            with open(shipments_file, "w", encoding="utf-8", newline="") as file:
-                json.dump(data_list, file, indent=2)
-        except FileNotFoundError as ex:
-            raise OrderManagementException("Wrong file or file path") from ex
-        return True
