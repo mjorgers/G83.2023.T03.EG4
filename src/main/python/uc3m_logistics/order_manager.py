@@ -1,4 +1,4 @@
-"""Module """
+"""Contains the class OrderManager"""
 import datetime
 import re
 import json
@@ -7,6 +7,7 @@ from .order_request import OrderRequest
 from .order_management_exception import OrderManagementException
 from .order_shipping import OrderShipping
 from .order_manager_config import JSON_FILES_PATH
+from.json_store import JsonStore
 
 class OrderManager:
     """Class for providing the methods for managing the orders process"""
@@ -21,35 +22,6 @@ class OrderManager:
         result = myregex.fullmatch(tracking_code)
         if not result:
             raise OrderManagementException("tracking_code format is not valid")
-
-    @staticmethod
-    def save_store(order_request: OrderRequest) -> bool:
-        """Medthod for saving the orders store"""
-        file_store = JSON_FILES_PATH + "orders_store.json"
-        # first read the file
-        try:
-            with open(file_store, "r", encoding="utf-8", newline="") as file:
-                data_list = json.load(file)
-        except FileNotFoundError:
-            # file is not found , so  init my data_list
-            data_list = []
-        except json.JSONDecodeError as ex:
-            raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
-
-        found = False
-        for item in data_list:
-            if item["_OrderRequest__order_id"] == order_request.order_id:
-                found = True
-        if found is False:
-            data_list.append(order_request.__dict__)
-        else:
-            raise OrderManagementException("order_id is already registered in orders_store")
-        try:
-            with open(file_store, "w", encoding="utf-8", newline="") as file:
-                json.dump(data_list, file, indent=2)
-        except FileNotFoundError as ex:
-            raise OrderManagementException("Wrong file or file path") from ex
-        return True
 
     @staticmethod
     def save_fast(order_request: OrderRequest) -> None:
@@ -99,33 +71,20 @@ class OrderManager:
                                 phone_number,
                                 zip_code)
 
-        self.save_store(my_order)
+        my_store = JsonStore()
+        my_store.save_store(my_order)
 
         return my_order.order_id
 
     # pylint: disable=too-many-locals
     def send_product(self, input_file: str) -> str:
         """Sends the order included in the input_file"""
-        #data = self.read_json(input_file)
-
-        #email, order_id = self.validate_key_labels(data)
-
-        # check all the information
-
-        #self.validate_order_id(order_id)
-
-        #self.validate_email(email)
-
-        #product_id, order_type = self.check_order_id(data)
 
         my_sign = OrderShipping(input_file)
-
-        # save the OrderShipping in shipments_store.json
 
         self.save_orders_shipped(my_sign)
 
         return my_sign.tracking_code
-
 
     def deliver_product(self, tracking_code: str) -> bool:
         """Register the delivery of the product"""
