@@ -1,8 +1,11 @@
 """Contains the class OrderManager"""
 from .order_request import OrderRequest
 from .order_shipping import OrderShipping
-from.json_store import JsonStore
 from .order_delivered import OrderDelivered
+from .json_store_orders import JsonStoreOrders
+from .json_store_shipments_store import JsonStoreShipmentsStore
+from .json_store_shipments_delivered import JsonStoreShipmentsDelivered
+
 
 class OrderManager:
     """Class for providing the methods for managing the orders process"""
@@ -25,8 +28,8 @@ class OrderManager:
                                 phone_number,
                                 zip_code)
 
-        my_store = JsonStore()
-        my_store.save_store(my_order)
+        my_store = JsonStoreOrders()
+        my_store.add_item(my_order)
 
         return my_order.order_id
 
@@ -35,8 +38,8 @@ class OrderManager:
         """Sends the order included in the input_file"""
 
         my_sign = OrderShipping(input_file)
-        my_store = JsonStore()
-        my_store.save_orders_shipped(my_sign)
+        my_store = JsonStoreShipmentsStore()
+        my_store.add_item(my_sign)
 
         return my_sign.tracking_code
 
@@ -45,12 +48,8 @@ class OrderManager:
         my_deliver = OrderDelivered(tracking_code)
 
         # check if this tracking_code is in shipments_store
-        my_store = JsonStore()
-        data_list = my_store.read_shipping_store()
-
-        # search this tracking_code
-        del_timestamp = my_store.find_tracking_code(data_list, tracking_code)
+        my_store = JsonStoreShipmentsDelivered()
+        del_timestamp = my_store.add_item(my_deliver)
         my_deliver.check_date(del_timestamp)
-
         my_store.save_delivere_store(my_deliver)
         return True

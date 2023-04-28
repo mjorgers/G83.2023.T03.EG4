@@ -18,7 +18,6 @@ class TestDeliverProduct(TestCase):
         file_store_patient = JSON_FILES_PATH + "orders_store.json"
         file_shipments_store = JSON_FILES_PATH + "shipments_store.json"
 
-
         if os.path.isfile(file_store_patient):
             os.remove(file_store_patient)
         if os.path.isfile(file_shipments_store):
@@ -34,8 +33,6 @@ class TestDeliverProduct(TestCase):
                                   phone_number="+34123456789",
                                   zip_code="01000")
         my_manager.send_product(file_test)
-
-
 
     @freeze_time("2023-03-15")
     def test_deliver_product_ok(self):
