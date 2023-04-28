@@ -1,7 +1,8 @@
 """module"""
+# pylint: disable=relative-beyond-top-level
 from .attribute import Attribute
 
-
+# pylint: disable=too-few-public-methods
 class Address(Attribute):
     """address"""
     def __init__(self, attr_value):

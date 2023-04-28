@@ -1,7 +1,7 @@
 """Contains the class OrderDelivered"""
 from datetime import datetime
-from.order_management_exception import OrderManagementException
-from.attribute_tracking_code import TrackingCode
+from uc3m_logistics.exception.order_management_exception import OrderManagementException
+from uc3m_logistics.data.data_attr.attribute_tracking_code import TrackingCode
 class OrderDelivered():
     """OrderDelivered"""
     def __init__(self, tracking_code):

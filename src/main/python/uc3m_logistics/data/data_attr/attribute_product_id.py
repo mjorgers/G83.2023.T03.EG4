@@ -1,8 +1,9 @@
 """module"""
+from uc3m_logistics.exception.order_management_exception import OrderManagementException
+# pylint: disable=relative-beyond-top-level
 from .attribute import Attribute
-from .order_management_exception import OrderManagementException
 
-
+# pylint: disable=too-few-public-methods
 class ProductId(Attribute):
     """Product_id"""
 

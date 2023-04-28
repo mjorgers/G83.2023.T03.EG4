@@ -205,7 +205,7 @@ class TestSendProduct(TestCase):
             my_manager.send_product(file_test)
         #pylint: disable=broad-except
         except Exception as exception_raised:
-            exception_message = exception_raised.__str__()
+            exception_message = str(exception_raised)
 
         #restore the original orders' store
         os.rename(file_store, JSON_FILES_PATH + "orders_store_manipulated.json")

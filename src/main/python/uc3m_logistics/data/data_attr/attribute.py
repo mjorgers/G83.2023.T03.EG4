@@ -1,8 +1,8 @@
 """module"""
 import re
-from .order_management_exception import OrderManagementException
+from uc3m_logistics.exception.order_management_exception import OrderManagementException
 
-
+# pylint: disable=too-few-public-methods
 class Attribute():
     """attribute"""
     def __init__(self):

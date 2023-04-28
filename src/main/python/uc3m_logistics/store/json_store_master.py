@@ -1,6 +1,6 @@
 """Contains the class JsonStoreMaster"""
 import json
-from .order_management_exception import OrderManagementException
+from uc3m_logistics.exception.order_management_exception import OrderManagementException
 
 
 class JsonStoreMaster():

@@ -1,9 +1,11 @@
 """Contains the class JsonStoreOrders"""
+from uc3m_logistics.config.order_manager_config import JSON_FILES_PATH
+from uc3m_logistics.exception.order_management_exception import OrderManagementException
+# pylint: disable=relative-beyond-top-level
 from .json_store_master import JsonStoreMaster
-from .order_manager_config import JSON_FILES_PATH
-from .order_management_exception import OrderManagementException
 
 
+# pylint: disable=too-few-public-methods
 class JsonStoreOrders(JsonStoreMaster):
     """Clase JsonStoreOrders"""
     _FILE_PATH = JSON_FILES_PATH + "orders_store.json"
@@ -11,7 +13,9 @@ class JsonStoreOrders(JsonStoreMaster):
     _data_list = []
 
     def __init__(self):
-        pass
+        # pylint: disable=useless-parent-delegation
+        super().__init__()
+
     def add_item(self, item):
         """Añadimos item"""
         self.load_store()

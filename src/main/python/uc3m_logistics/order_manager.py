@@ -1,10 +1,10 @@
 """Contains the class OrderManager"""
-from .order_request import OrderRequest
-from .order_shipping import OrderShipping
-from .order_delivered import OrderDelivered
-from .json_store_orders import JsonStoreOrders
-from .json_store_shipments_store import JsonStoreShipmentsStore
-from .json_store_shipments_delivered import JsonStoreShipmentsDelivered
+from uc3m_logistics.data.order_request import OrderRequest
+from uc3m_logistics.data.order_shipping import OrderShipping
+from uc3m_logistics.data.order_delivered import OrderDelivered
+from uc3m_logistics.store.json_store_orders import JsonStoreOrders
+from uc3m_logistics.store.json_store_shipments_store import JsonStoreShipmentsStore
+from uc3m_logistics.store.json_store_shipments_delivered import JsonStoreShipmentsDelivered
 
 
 class OrderManager:
